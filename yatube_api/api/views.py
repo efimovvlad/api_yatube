@@ -7,7 +7,7 @@ from .serializers import GroupSerializer, PostSerializer, CommentSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().select_related('author', 'group')
     serializer_class = PostSerializer
 
     def perform_create(self, serializer):
@@ -30,12 +30,13 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
     def get_queryset(self):
         post_id = self.kwargs.get('post_id')
-        return Comment.objects.filter(post=post_id)
+        post = get_object_or_404(Post, pk=post_id)
+        comments = post.comments.all()
+        return comments
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
